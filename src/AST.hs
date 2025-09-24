@@ -1,4 +1,7 @@
+{-# LANGUAGE ViewPatterns #-}
+
 module AST where
+
 
 -- Identificadores de Variable
 type Variable = String
@@ -14,6 +17,7 @@ data Exp a where
   Minus  :: Exp Int -> Exp Int -> Exp Int
   Times  :: Exp Int -> Exp Int -> Exp Int
   Div    :: Exp Int -> Exp Int -> Exp Int
+  VarInc :: Variable -> Exp Int
 
   -- Expresiones booleanas
   BTrue  :: Exp Bool
@@ -41,5 +45,19 @@ data Comm
 
 pattern IfThen :: Exp Bool -> Comm -> Comm
 pattern IfThen b c = IfThenElse b c Skip
+
+pattern Case :: [(Exp Bool,Comm)] -> Comm 
+pattern Case list <- (fromIftoCase -> list)
+  where
+    Case list = fromCasetoIf list
+
+fromIftoCase :: Comm -> [(Exp Bool, Comm)]
+fromIftoCase Skip = []
+fromIftoCase (IfThenElse b c rest) = (b,c) : fromIftoCase rest
+fromIftoCase _ = error "IfThenElse expected"
+
+fromCasetoIf :: [(Exp Bool, Comm)] -> Comm
+fromCasetoIf [] = Skip
+fromCasetoIf ((b,c) : rest) = IfThenElse b c (fromCasetoIf rest)
 
 data Error = DivByZero | UndefVar deriving (Eq, Show)
