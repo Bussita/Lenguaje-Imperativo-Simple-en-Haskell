@@ -52,28 +52,88 @@ lis = makeTokenParser
 --- Parser de expresiones enteras
 -----------------------------------
 intexp :: Parser (Exp Int)
-intexp = (try pConst) <|> (try pVar) <|> pIntExp
+intexp = addSubExp
 
+-- + y - binarios (menor precedencia) por eso primero se aplica m
+addSubExp :: Parser (Exp Int)
+addSubExp = chainl1 mulDivExp addSubOp
+
+addSubOp :: Parser (Exp Int -> Exp Int -> Exp Int)
+addSubOp = (do reservedOp lis "+"
+               return Plus)
+       <|> (do reservedOp lis "-"
+               return Minus)
+
+mulDivExp :: Parser (Exp Int)
+mulDivExp = chainl1 unaryExp mulDivOp
+
+mulDivOp :: Parser (Exp Int -> Exp Int -> Exp Int)
+mulDivOp = (do reservedOp lis "*"
+               return Times)
+       <|> (do reservedOp lis "/"
+               return Div)
+
+unaryExp :: Parser (Exp Int)
+unaryExp = (try pUMinus) <|> postfixExp
+
+pUMinus :: Parser (Exp Int)
+pUMinus = do
+            reservedOp lis "-"
+            e <- unaryExp
+            return (UMinus e)
+
+postfixExp :: Parser (Exp Int)
+postfixExp = do
+  e <- atomicIntExp
+  postfixCheck e  <|> return e -- Básicamente parseamos una expresión atómica, después de eso tratamos de matchear un ++ seguido de una variable
+-- si no matchea, entonces devolvemos nuestra expresión tal cual
+
+postfixCheck :: Exp Int -> Parser (Exp Int)
+postfixCheck e = do
+                reservedOp lis "++"
+                case e of
+                    Var v -> return (VarInc v)
+                    _ -> fail "++ solo se puede aplicar a variables"
+-- Expresiones atómicas
+atomicIntExp :: Parser (Exp Int)
+atomicIntExp = (try pConst) <|> (try pVar) <|> parens lis intexp
 
 pConst :: Parser (Exp Int)
 pConst = do
-          n <- natural lis
-          return (Const (fromInteger n))
+  n <- natural lis
+  return (Const (fromInteger n))
 
 pVar :: Parser (Exp Int)
 pVar = do
-        s <- many1 letter
-        return (Var s)
-
-pIntExp :: Parser (Exp Int)
-pIntExp = undefined
+  s <- identifier lis
+  return (Var s)
 ------------------------------------
 --- Parser de expresiones booleanas
 ------------------------------------
-
 boolexp :: Parser (Exp Bool)
-boolexp = (try pBasicBool) <|> (try pEqual) <|> (try pNotEqual) <|> (try pLess) <|> (try pGreater) <|> (try pNot) <|> (try pAnd) <|> (try pOr) <|> pBoolParen
+boolexp = orExp
 
+orExp :: Parser (Exp Bool)
+orExp = chainl1 andExp orOp
+
+orOp :: Parser (Exp Bool -> Exp Bool -> Exp Bool)
+orOp = do
+  reservedOp lis "||"
+  return Or
+
+andExp :: Parser (Exp Bool)
+andExp = chainl1 notExp andOp
+
+andOp :: Parser (Exp Bool -> Exp Bool -> Exp Bool)
+andOp = do
+  reservedOp lis "&&"
+  return And
+
+notExp :: Parser (Exp Bool)
+notExp = (try pNot) <|> pAtomicBool
+
+pAtomicBool :: Parser (Exp Bool)
+pAtomicBool = (try pBasicBool) <|> (try (pBinaryBool "==" Eq)) <|> (try (pBinaryBool "!=" NEq)) <|> (try (pBinaryBool "<" Lt)) <|> (try (pBinaryBool ">" Gt)) <|> parens lis boolexp
 
 pBasicBool :: Parser (Exp Bool)
 pBasicBool = (try pTrue) <|> pFalse
@@ -88,33 +148,12 @@ pFalse = do
           reserved lis "false"
           return BFalse
 
-pEqual :: Parser (Exp Bool)
-pEqual = do
+pBinaryBool :: String -> (Exp Int -> Exp Int -> Exp Bool) -> Parser (Exp Bool)
+pBinaryBool s op = do
           e1 <- intexp
-          reservedOp lis "=="
+          reservedOp lis s
           e2 <- intexp
-          return (Eq e1 e2)
-
-pNotEqual :: Parser (Exp Bool)
-pNotEqual = do
-          e1 <- intexp
-          reservedOp lis "!="
-          e2 <- intexp
-          return (NEq e1 e2)
-
-pLess :: Parser (Exp Bool)
-pLess = do
-          e1 <- intexp
-          reservedOp lis "<"
-          e2 <- intexp
-          return (Lt e1 e2)
-
-pGreater :: Parser (Exp Bool)
-pGreater = do
-          e1 <- intexp
-          reservedOp lis ">"
-          e2 <- intexp
-          return (Gt e1 e2)
+          return (op e1 e2)
 
 pNot :: Parser (Exp Bool)
 pNot = do
@@ -135,13 +174,6 @@ pOr = do
           reservedOp lis "||"
           b2 <- boolexp
           return (Or b1 b2)
-
-pBoolParen :: Parser (Exp Bool)
-pBoolParen = do
-              reservedOp lis "("
-              b <- boolexp
-              reservedOp lis ")"
-              return b
 
 -----------------------------------
 --- Parser de comandos

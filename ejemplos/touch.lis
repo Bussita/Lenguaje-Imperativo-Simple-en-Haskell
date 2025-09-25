@@ -1,1 +1,1 @@
-hola           =         5 ; skip ; if true then { x = 5 } 
+hola           =         5 ; skip ; if false { skip } 
