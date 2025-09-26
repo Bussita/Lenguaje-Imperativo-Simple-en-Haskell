@@ -57,8 +57,12 @@ pComm (IfThenElse b c1 c2) =
     $$  rbrace
 pComm (RepeatUntil c b) =
   text "repeat" <+> lbrace $$ nest tabW (pComm c) $$ rbrace <+> text "until" <+> parens (pExp b)
-pComm (Case _) = undefined
-  
+pComm (Case xs) = text "case" <+> lbrace <+> pCaseBody xs <+> rbrace
+
+pCaseBody [] = text ""
+pCaseBody ((b,c):rest) = text "b : " <+> pComm c <+> pCaseBody rest
+
+
 renderComm :: Comm -> String
 renderComm = render . pComm
 

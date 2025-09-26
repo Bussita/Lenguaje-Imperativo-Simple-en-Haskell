@@ -43,6 +43,7 @@ lis = makeTokenParser
                         , "++"
                         , "("
                         , ")"
+                        , ":"
                         ]
     }
   )
@@ -111,7 +112,7 @@ pVar = do
 --- Parser de expresiones booleanas
 ------------------------------------
 boolexp :: Parser (Exp Bool)
-boolexp = parens lis boolexp <|> orExp
+boolexp = orExp
 
 orExp :: Parser (Exp Bool)
 orExp = chainl1 andExp orOp
@@ -133,7 +134,7 @@ notExp :: Parser (Exp Bool)
 notExp = (try pNot) <|> pAtomicBool
 
 pAtomicBool :: Parser (Exp Bool)
-pAtomicBool = (try pBasicBool) <|> (try (pBinaryBool "==" Eq)) <|> (try (pBinaryBool "!=" NEq)) <|> (try (pBinaryBool "<" Lt)) <|> (try (pBinaryBool ">" Gt))
+pAtomicBool = (try pBasicBool) <|> (try (pBinaryBool "==" Eq)) <|> (try (pBinaryBool "!=" NEq)) <|> (try (pBinaryBool "<" Lt)) <|> (try (pBinaryBool ">" Gt)) <|> (try(parens lis boolexp))
 
 pBasicBool :: Parser (Exp Bool)
 pBasicBool = (try pTrue) <|> pFalse
@@ -183,7 +184,7 @@ comm :: Parser Comm
 comm = chainl1 simpleComm seqOp 
 
 simpleComm :: Parser Comm
-simpleComm = (try pSkip)  <|> (try pAssign) <|> (try pIf) <|> (try pRepeat) <|> (try (parens lis comm))  
+simpleComm = (try pSkip)  <|> (try pAssign) <|> (try pIf) <|> (try pRepeat) <|> (try pCase) <|> (try (parens lis comm))  
 
 seqOp :: Parser (Comm -> Comm -> Comm)
 seqOp = do
@@ -229,6 +230,26 @@ pRepeat = do
             reserved lis "until"
             b <- boolexp
             return (RepeatUntil c b)
+
+pCase :: Parser Comm
+pCase = do
+          reserved lis "case"
+          reservedOp lis "{"
+          e <- extraCategory
+          reservedOp lis "}"
+          return e
+
+extraCategory :: Parser Comm -- está mal porque siempre va a devolver algo y no falla
+extraCategory = (do
+                  b <- boolexp
+                  reservedOp lis ":"
+                  reservedOp lis "{"
+                  c <- comm
+                  reservedOp lis "}"
+                  e <- extraCategory
+                  return (IfThenElse b c e)) 
+                  <|> return (IfThenElse BTrue Skip Skip)
+
 ------------------------------------
 -- Función de parseo
 ------------------------------------
