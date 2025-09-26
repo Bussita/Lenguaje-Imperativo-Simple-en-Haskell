@@ -59,8 +59,8 @@ pComm (RepeatUntil c b) =
   text "repeat" <+> lbrace $$ nest tabW (pComm c) $$ rbrace <+> text "until" <+> parens (pExp b)
 pComm (Case xs) = text "case" <+> lbrace <+> pCaseBody xs <+> rbrace
 
-pCaseBody [] = text ""
-pCaseBody ((b,c):rest) = text "b : " <+> pComm c <+> pCaseBody rest
+pCaseBody [] = empty  -- Caso base: lista vacía no imprime nada
+pCaseBody ((b,c):rest) = pExp b <+> colon <+> lbrace <+> pComm c <+> rbrace <+> pCaseBody rest
 
 
 renderComm :: Comm -> String

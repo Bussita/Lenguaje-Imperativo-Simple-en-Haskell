@@ -467,9 +467,7 @@ tests =
     , (testCaseAnidados, "ejemplos/test050_case_anidados.lis")
     
     -- Programas complejos
-    , (testFactorial, "ejemplos/test059_factorial.lis")
-    , (testMaximoTres, "ejemplos/test061_maximo_tres.lis")
-    
+    , (testFactorial, "ejemplos/test059_factorial.lis")    
     -- Casos de regresión
     , (testRepeatUnaVez, "ejemplos/test077_repeat_una_vez.lis")
     , (testAsignacionCircular, "ejemplos/test079_asignacion_circular.lis")

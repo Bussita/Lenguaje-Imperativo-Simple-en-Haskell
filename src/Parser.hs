@@ -159,7 +159,7 @@ pBinaryBool s op = do
 pNot :: Parser (Exp Bool)
 pNot = do
           reservedOp lis "!"
-          e1 <- boolexp
+          e1 <- notExp
           return (Not e1)
 
 pAnd :: Parser (Exp Bool)
@@ -233,22 +233,24 @@ pRepeat = do
 
 pCase :: Parser Comm
 pCase = do
-          reserved lis "case"
-          reservedOp lis "{"
-          e <- extraCategory
-          reservedOp lis "}"
-          return e
+  reserved lis "case"
+  reservedOp lis "{"
+  clauses <- many pCaseClause
+  reservedOp lis "}"
+  return (buildCase clauses)
 
-extraCategory :: Parser Comm -- está mal porque siempre va a devolver algo y no falla
-extraCategory = (do
-                  b <- boolexp
-                  reservedOp lis ":"
-                  reservedOp lis "{"
-                  c <- comm
-                  reservedOp lis "}"
-                  e <- extraCategory
-                  return (IfThenElse b c e)) 
-                  <|> return (IfThenElse BTrue Skip Skip)
+pCaseClause :: Parser (Exp Bool, Comm)
+pCaseClause = do
+  b <- boolexp
+  reservedOp lis ":"
+  reservedOp lis "{"
+  c <- comm
+  reservedOp lis "}"
+  return (b, c)
+
+buildCase :: [(Exp Bool, Comm)] -> Comm
+buildCase [] = Skip
+buildCase ((b, c) : rest) = IfThenElse b c (buildCase rest)
 
 ------------------------------------
 -- Función de parseo

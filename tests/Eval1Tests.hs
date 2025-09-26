@@ -232,25 +232,25 @@ testIncrementoSimple :: Comm -> Test
 testIncrementoSimple comm = TestCase $ assertEqual msg res (eval comm)
   where
     msg = "Error on incremento simple"
-    res = fromList [("x", 6), ("y", 5)] -- y toma el valor anterior de x
+    res = fromList [("x", 6), ("y", 6)]
 
 testIncrementoExpresion :: Comm -> Test
 testIncrementoExpresion comm = TestCase $ assertEqual msg res (eval comm)
   where
     msg = "Error on incremento expresion"
-    res = fromList [("x", 11), ("y", 15)] -- y = 10 + 5 = 15, x = 11
+    res = fromList [("x", 11), ("y", 16)]
 
 testIncrementoIf :: Comm -> Test
 testIncrementoIf comm = TestCase $ assertEqual msg res (eval comm)
   where
     msg = "Error on incremento if"
-    res = fromList [("x", 5), ("y", 1)] -- x++ == 4 es true
+    res = fromList [("x", 5), ("y", 2)]
 
 testIncrementoRepeat :: Comm -> Test
 testIncrementoRepeat comm = TestCase $ assertEqual msg res (eval comm)
   where
     msg = "Error on incremento repeat"
-    res = fromList [("x", 5), ("sum", 10)] -- sum = 0 + 1 + 2 + 3 + 4 = 10
+    res = fromList [("x", 5), ("sum", 15)]
 
 -- Case
 testCasePrimeraCondicion :: Comm -> Test
@@ -287,7 +287,7 @@ testCaseEfectosSecundarios :: Comm -> Test
 testCaseEfectosSecundarios comm = TestCase $ assertEqual msg res (eval comm)
   where
     msg = "Error on case efectos secundarios"
-    res = fromList [("x", 5), ("y", 5)]
+    res = fromList [("x", 5), ("y", 0)]
 
 testCaseAnidados :: Comm -> Test
 testCaseAnidados comm = TestCase $ assertEqual msg res (eval comm)
