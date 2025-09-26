@@ -52,7 +52,7 @@ lis = makeTokenParser
 --- Parser de expresiones enteras
 -----------------------------------
 intexp :: Parser (Exp Int)
-intexp = (try (parens lis intexp)) <|> addSubExp -- Por qué no parsea ( y = -x++ ) pero sí parsea y = (-x++)
+intexp = addSubExp -- Por qué no parsea ( y = -x++ ) pero sí parsea y = (-x++)
 
 -- + y - binarios (menor precedencia) por eso primero se aplica mulDivExp
 addSubExp :: Parser (Exp Int)
@@ -96,7 +96,7 @@ postfixCheck e = do
                     _ -> fail "++ solo se puede aplicar a variables"
 -- Expresiones atómicas
 atomicIntExp :: Parser (Exp Int)
-atomicIntExp = (try pConst) <|> (try pVar)
+atomicIntExp = (try pConst) <|> (try pVar) <|> (try (parens lis intexp)) 
 
 pConst :: Parser (Exp Int)
 pConst = do
@@ -183,7 +183,7 @@ comm :: Parser Comm
 comm = chainl1 simpleComm seqOp 
 
 simpleComm :: Parser Comm
-simpleComm = (try (parens lis comm)) <|> (try pSkip)  <|> (try pAssign) <|> (try pIf) <|> (try pRepeat)  
+simpleComm = (try pSkip)  <|> (try pAssign) <|> (try pIf) <|> (try pRepeat) <|> (try (parens lis comm))  
 
 seqOp :: Parser (Comm -> Comm -> Comm)
 seqOp = do
