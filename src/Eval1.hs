@@ -25,7 +25,7 @@ lookfor v sigma = sigma M.! v
 -- Cambia el valor de una variable en un estado
 -- Completar la definición
 update :: Variable -> Int -> State -> State
-update v a sigma = M.update (\i -> Just a) v sigma
+update v a sigma = M.insert v a sigma
 
 -- Evalúa un programa en el estado vacío
 eval :: Comm -> State
@@ -41,11 +41,13 @@ stepCommStar c    s = T.uncurry stepCommStar $ stepComm c s
 -- Completar la definición
 stepComm :: Comm -> State -> Pair Comm State
 stepComm Skip sigma = Skip :!: sigma
-stepComm (Let v exp) sigma = Skip :!: (update v (T.fst (evalExp exp sigma)) sigma)
+stepComm (Let v e) sigma = let 
+  r1 = evalExp e sigma 
+  in Skip :!: (update v (T.fst r1) (T.snd r1))
 stepComm (Seq Skip c2) sigma = c2 :!: sigma 
 stepComm (Seq c1 c2) sigma = let 
   res = stepComm c1 sigma 
-  in (Seq (T.fst res) c2) :!: T.snd res 
+  in (Seq (T.fst res) c2) :!: T.snd res
 stepComm (IfThenElse b c1 c2) sigma = let 
   res = evalExp b sigma 
   in case T.fst res of 
