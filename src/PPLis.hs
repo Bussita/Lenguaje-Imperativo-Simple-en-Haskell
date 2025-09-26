@@ -29,6 +29,7 @@ pExp (Gt  a b)   = pExp a <+> text ">" <+> pExp b
 pExp (And a b)   = pExp a <+> text "&&" <+> pExp b
 pExp (Or  a b)   = pExp a <+> text "||" <+> pExp b
 pExp (Not b  )   = text "!" <+> pExp b
+pExp (VarInc x)  = pVar x <+> text "++"
 pExp _ =
   error
     "El Pretty Printer no está implementado para las extensiones del Ejercicio 1."
@@ -56,6 +57,7 @@ pComm (IfThenElse b c1 c2) =
     $$  rbrace
 pComm (RepeatUntil c b) =
   text "repeat" <+> lbrace $$ nest tabW (pComm c) $$ rbrace <+> text "until" <+> parens (pExp b)
+pComm (Case _) = undefined
   
 renderComm :: Comm -> String
 renderComm = render . pComm

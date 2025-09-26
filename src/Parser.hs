@@ -52,9 +52,9 @@ lis = makeTokenParser
 --- Parser de expresiones enteras
 -----------------------------------
 intexp :: Parser (Exp Int)
-intexp = addSubExp
+intexp = (try (parens lis intexp)) <|> addSubExp -- Por qué no parsea ( y = -x++ ) pero sí parsea y = (-x++)
 
--- + y - binarios (menor precedencia) por eso primero se aplica m
+-- + y - binarios (menor precedencia) por eso primero se aplica mulDivExp
 addSubExp :: Parser (Exp Int)
 addSubExp = chainl1 mulDivExp addSubOp
 
@@ -96,7 +96,7 @@ postfixCheck e = do
                     _ -> fail "++ solo se puede aplicar a variables"
 -- Expresiones atómicas
 atomicIntExp :: Parser (Exp Int)
-atomicIntExp = (try pConst) <|> (try pVar) <|> parens lis intexp
+atomicIntExp = (try pConst) <|> (try pVar)
 
 pConst :: Parser (Exp Int)
 pConst = do
@@ -111,7 +111,7 @@ pVar = do
 --- Parser de expresiones booleanas
 ------------------------------------
 boolexp :: Parser (Exp Bool)
-boolexp = orExp
+boolexp = parens lis boolexp <|> orExp
 
 orExp :: Parser (Exp Bool)
 orExp = chainl1 andExp orOp
@@ -133,7 +133,7 @@ notExp :: Parser (Exp Bool)
 notExp = (try pNot) <|> pAtomicBool
 
 pAtomicBool :: Parser (Exp Bool)
-pAtomicBool = (try pBasicBool) <|> (try (pBinaryBool "==" Eq)) <|> (try (pBinaryBool "!=" NEq)) <|> (try (pBinaryBool "<" Lt)) <|> (try (pBinaryBool ">" Gt)) <|> parens lis boolexp
+pAtomicBool = (try pBasicBool) <|> (try (pBinaryBool "==" Eq)) <|> (try (pBinaryBool "!=" NEq)) <|> (try (pBinaryBool "<" Lt)) <|> (try (pBinaryBool ">" Gt))
 
 pBasicBool :: Parser (Exp Bool)
 pBasicBool = (try pTrue) <|> pFalse
@@ -182,7 +182,8 @@ pOr = do
 comm :: Parser Comm
 comm = chainl1 simpleComm seqOp 
 
-simpleComm = (try pSkip)  <|> (try pAssign) <|> (try pIf) <|> (try pRepeat)
+simpleComm :: Parser Comm
+simpleComm = (try (parens lis comm)) <|> (try pSkip)  <|> (try pAssign) <|> (try pIf) <|> (try pRepeat)  
 
 seqOp :: Parser (Comm -> Comm -> Comm)
 seqOp = do
