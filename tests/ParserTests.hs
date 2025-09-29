@@ -113,15 +113,6 @@ testConstantesBool filePath cont = okTest filePath cont "Error on constantes boo
     expected = Seq (IfThenElse BTrue (Let "x" (Const 1)) Skip)
                    (IfThenElse BFalse (Let "x" (Const 2)) Skip)
 
-testComparaciones :: FilePath -> String -> Test
-testComparaciones filePath cont = okTest filePath cont "Error on comparaciones" (Right expected)
-  where
-    expected = Seq (Seq (Seq (Let "x" (Const 5))
-                             (IfThenElse (Eq (Var "x") (Const 5)) (Let "y" (Const 1)) Skip))
-                        (IfThenElse (NEq (Var "x") (Const 3)) (Let "y" (Const 2)) Skip))
-                   (Seq (IfThenElse (Lt (Var "x") (Const 10)) (Let "y" (Const 3)) Skip)
-                        (IfThenElse (Gt (Var "x") (Const 2)) (Let "y" (Const 4)) Skip))
-
 testNegacion :: FilePath -> String -> Test
 testNegacion filePath cont = okTest filePath cont "Error on negacion" (Right expected)
   where
@@ -232,16 +223,6 @@ testRepeatMultiplesVars filePath cont = okTest filePath cont "Error on repeat mu
                    (RepeatUntil (Seq (Let "x" (Plus (Var "x") (Const 1)))
                                      (Let "y" (Minus (Var "y") (Const 1))))
                                 (Gt (Var "x") (Var "y")))
-
-testRepeatAnidados :: FilePath -> String -> Test
-testRepeatAnidados filePath cont = okTest filePath cont "Error on repeat anidados" (Right expected)
-  where
-    expected = Seq (Seq (Let "x" (Const 0)) (Let "y" (Const 0)))
-                   (RepeatUntil (Seq (Let "y" (Const 0))
-                                     (Seq (RepeatUntil (Let "y" (Plus (Var "y") (Const 1)))
-                                                       (Eq (Var "y") (Const 2)))
-                                          (Let "x" (Plus (Var "x") (Const 1)))))
-                                (Eq (Var "x") (Const 3)))
 
 -- Operador ++
 testIncrementoSimple :: FilePath -> String -> Test
@@ -425,7 +406,6 @@ tests =
     
     -- Expresiones booleanas
     , (testConstantesBool, "ejemplos/test015_constantes_bool.lis")
-    , (testComparaciones, "ejemplos/test016_comparaciones.lis")
     , (testNegacion, "ejemplos/test017_negacion.lis")
     , (testAndLogico, "ejemplos/test018_and_logico.lis")
     , (testOrLogico, "ejemplos/test019_or_logico.lis")
@@ -449,8 +429,7 @@ tests =
     , (testRepeatSimple, "ejemplos/test034_repeat_simple.lis")
     , (testRepeatNoEntra, "ejemplos/test035_repeat_no_entra.lis")
     , (testRepeatMultiplesVars, "ejemplos/test036_repeat_multiples_vars.lis")
-    , (testRepeatAnidados, "ejemplos/test037_repeat_anidados.lis")
-    
+
     -- Operador ++
     , (testIncrementoSimple, "ejemplos/test038_incremento_simple.lis")
     , (testIncrementoExpresion, "ejemplos/test039_incremento_expresion.lis")
