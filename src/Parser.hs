@@ -184,7 +184,7 @@ comm :: Parser Comm
 comm = chainl1 simpleComm seqOp 
 
 simpleComm :: Parser Comm
-simpleComm = (try pSkip)  <|> (try pAssign) <|> (try pIf) <|> (try pRepeat) <|> (try pCase) <|> (try (parens lis comm))  
+simpleComm = (try pSkip)  <|> (try pAssign) <|> (try pIf) <|> (try pRepeat) <|> (try pCase)
 
 seqOp :: Parser (Comm -> Comm -> Comm)
 seqOp = do
